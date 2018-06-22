@@ -44,7 +44,7 @@
 
 关系图:
 
-![关系图](img\840965-e7a5179ac162e8b0.png)
+![关系图](https://raw.githubusercontent.com/jayknoxqu/ftp-pool/master/img/840965-e7a5179ac162e8b0.png)
 
 
 
