@@ -372,15 +372,9 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
 
 [FTPClient连接池的实现 ](https://yq.aliyun.com/articles/5904)
 
-[commons.pool2 对象池的使用](https://my.oschina.net/xinxingegeya/blog/391560 )
-
 [Apache Commons-pool2（整理）](https://www.jianshu.com/p/b0189e01de35)
 
 [commons-pool2 官方案列](http://commons.apache.org/proper/commons-pool/examples.html)
-
-[Spring Boot读取配置文件](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config-typesafe-configuration-properties ) 
-
-[commons-pool2 官方api文档](https://commons.apache.org/proper/commons-pool/apidocs/org/apache/commons/pool2/BaseObjectPool.html)
 
 
 
