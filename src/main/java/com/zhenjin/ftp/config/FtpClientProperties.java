@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * ftp客服端连接配置
  *
  * @author ZhenJin
- * @see <p>https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config-typesafe-configuration-properties</p>
+ * @see "https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config-typesafe-configuration-properties"
  */
 @Getter
 @Setter

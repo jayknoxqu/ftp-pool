@@ -12,9 +12,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * FTP连接池
+ * 不建议自己实现连接池
  *
  * @author ZhenJin
- * @see <p>https://commons.apache.org/proper/commons-pool/apidocs/org/apache/commons/pool2/BaseObjectPool.html</p>
+ * @see "https://commons.apache.org/proper/commons-pool/apidocs/org/apache/commons/pool2/BaseObjectPool.html"
  */
 @Slf4j
 @Deprecated
@@ -31,7 +32,6 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
      * 初始化连接池，需要注入一个工厂来提供FTPClient实例
      *
      * @param ftpClientFactory ftp工厂
-     * @throws Exception
      */
     public FtpClientPool(FtpClientFactory ftpClientFactory) throws Exception {
         this(DEFAULT_POOL_SIZE, ftpClientFactory);
@@ -47,7 +47,6 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
      * 初始化连接池，需要注入一个工厂来提供FTPClient实例
      *
      * @param maxPoolSize 最大连接数
-     * @throws Exception
      */
     private void initPool(int maxPoolSize) throws Exception {
         for (int i = 0; i < maxPoolSize; i++) {
@@ -86,7 +85,8 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
     @Override
     public void returnObject(FTPClient client) {
         try {
-            if (client != null && !ftpBlockingQueue.offer(client, 3, TimeUnit.SECONDS)) {
+            long timeout = 3L;
+            if (client != null && !ftpBlockingQueue.offer(client, timeout, TimeUnit.SECONDS)) {
                 ftpClientFactory.destroyObject(ftpClientFactory.wrap(client));
             }
         } catch (InterruptedException e) {

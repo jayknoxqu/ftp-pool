@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * 程序启动类
+ *
  * @author ZhenJin
  */
 @SpringBootApplication

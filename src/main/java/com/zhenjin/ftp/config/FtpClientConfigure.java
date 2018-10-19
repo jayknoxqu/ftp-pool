@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
  * FTPClient配置类，封装了FTPClient的相关配置
  *
  * @author ZhenJin
- *
  */
 @Configuration
 @EnableConfigurationProperties(FtpClientProperties.class)
@@ -30,7 +29,7 @@ public class FtpClientConfigure {
     }
 
     @Bean
-    public FtpClientTemplate getFtpTemplate(){
+    public FtpClientTemplate getFtpTemplate() {
         return new FtpClientTemplate(getFtpClientFactory());
     }
 

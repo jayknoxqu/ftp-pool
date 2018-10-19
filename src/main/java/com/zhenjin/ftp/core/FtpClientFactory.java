@@ -14,7 +14,7 @@ import java.io.IOException;
  * FTPClient工厂类，通过FTPClient工厂提供FTPClient实例的创建和销毁
  *
  * @author ZhenJin
- * @see <p>http://commons.apache.org/proper/commons-pool/examples.html</p>
+ * @see "http://commons.apache.org/proper/commons-pool/examples.html"
  */
 @Slf4j
 public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {

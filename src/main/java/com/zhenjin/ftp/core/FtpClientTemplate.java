@@ -28,6 +28,7 @@ public class FtpClientTemplate {
      *
      * @param localFile 当地文件
      * @param remotePath 上传服务器路径 - 应该以/结束
+     * @return true or false
      */
     public boolean uploadFile(File localFile, String remotePath) {
         FTPClient ftpClient = null;
@@ -69,7 +70,7 @@ public class FtpClientTemplate {
      * @param remotePath FTP服务器文件目录
      * @param fileName   需要下载的文件名称
      * @param localPath  下载后的文件路径
-     * @return
+     * @return true or false
      */
     public boolean downloadFile(String remotePath, String fileName, String localPath) {
         FTPClient ftpClient = null;
@@ -110,7 +111,7 @@ public class FtpClientTemplate {
      *
      * @param remotePath FTP服务器保存目录
      * @param fileName   要删除的文件名称
-     * @return
+     * @return true or false
      */
     public boolean deleteFile(String remotePath, String fileName) {
         FTPClient ftpClient = null;
