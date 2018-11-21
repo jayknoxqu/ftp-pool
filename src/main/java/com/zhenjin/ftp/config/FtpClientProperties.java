@@ -2,6 +2,7 @@ package com.zhenjin.ftp.config;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.net.ftp.FTP;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -58,9 +59,15 @@ public class FtpClientProperties {
     private Integer bufferSize = 1024;
 
     /**
+     * 设置keepAlive
+     * 单位:秒  0禁用
+     */
+    private Integer keepAliveTimeout = 0;
+
+    /**
      * 传输文件类型
      */
-    private Integer transferFileType;
+    private Integer transferFileType = FTP.LOCAL_FILE_TYPE;
 
 
 }

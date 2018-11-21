@@ -33,6 +33,8 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
         FTPClient ftpClient = new FTPClient();
         ftpClient.setControlEncoding(config.getEncoding());
         ftpClient.setConnectTimeout(config.getConnectTimeout());
+        ftpClient.setControlKeepAliveTimeout(config.getKeepAliveTimeout());
+
         try {
 
             ftpClient.connect(config.getHost(), config.getPort());

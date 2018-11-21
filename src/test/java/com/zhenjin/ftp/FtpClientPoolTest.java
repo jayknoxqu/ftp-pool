@@ -1,6 +1,7 @@
 package com.zhenjin.ftp;
 
 import com.zhenjin.ftp.core.FtpClientTemplate;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +23,20 @@ public class FtpClientPoolTest {
 
     @Test
     public void uploadFile() {
-        ftpTemplate.uploadFile(new File("F:\\2017061315035721.txt"), "/home/test");
+        boolean uploadResult = ftpTemplate.uploadFile(new File("F:\\kubernetes-server-linux-amd64.tar.gz"), "/home/test");
+        Assert.assertTrue(uploadResult);
     }
 
     @Test
     public void downloadFile() {
-        ftpTemplate.downloadFile("/home/test", "2017061315035721.txt", "F:\\");
+        boolean downloadResult = ftpTemplate.downloadFile("/home/test", "2017061315035721.txt", "F:\\");
+        Assert.assertTrue(downloadResult);
     }
 
     @Test
     public void deleteFile() {
-        ftpTemplate.deleteFile("/home/test", "2017061315035721.txt");
+        boolean deleteResult = ftpTemplate.deleteFile("/home/test", "2017061315035721.txt");
+        Assert.assertTrue(deleteResult);
     }
 
 
