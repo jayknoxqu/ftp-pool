@@ -15,6 +15,7 @@ import java.io.IOException;
  *
  * @author ZhenJin
  * @see "http://commons.apache.org/proper/commons-pool/examples.html"
+ * @see "http://commons.apache.org/proper/commons-net/examples/ftp/FTPClientExample.java"
  */
 @Slf4j
 public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
@@ -32,6 +33,7 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
     public FTPClient create() {
         FTPClient ftpClient = new FTPClient();
         ftpClient.setControlEncoding(config.getEncoding());
+        ftpClient.setDataTimeout(config.getDataTimeout());
         ftpClient.setConnectTimeout(config.getConnectTimeout());
         ftpClient.setControlKeepAliveTimeout(config.getKeepAliveTimeout());
 
@@ -77,18 +79,17 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
         if (ftpPooled == null) {
             return;
         }
-
         FTPClient ftpClient = ftpPooled.getObject();
 
         try {
-            if (ftpClient.isConnected()) {
-                ftpClient.logout();
-            }
+            ftpClient.logout();
         } catch (IOException io) {
             log.error("ftp client logout failed...{}", io);
         } finally {
             try {
-                ftpClient.disconnect();
+                if (ftpClient.isConnected()) {
+                    ftpClient.disconnect();
+                }
             } catch (IOException io) {
                 log.error("close ftp client failed...{}", io);
             }

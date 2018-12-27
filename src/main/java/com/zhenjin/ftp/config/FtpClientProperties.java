@@ -54,6 +54,11 @@ public class FtpClientProperties {
     private Integer connectTimeout;
 
     /**
+     * 传输超时时间(秒)
+     */
+    private Integer dataTimeout;
+
+    /**
      * 缓冲大小
      */
     private Integer bufferSize = 1024;
