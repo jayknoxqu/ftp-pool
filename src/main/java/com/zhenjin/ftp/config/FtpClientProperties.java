@@ -66,13 +66,16 @@ public class FtpClientProperties {
     /**
      * 设置keepAlive
      * 单位:秒  0禁用
+     * Zero (or less) disables
      */
     private Integer keepAliveTimeout = 0;
 
     /**
      * 传输文件类型
+     * in theory this should not be necessary as servers should default to ASCII
+     * but they don't all do so - see NET-500
      */
-    private Integer transferFileType = FTP.LOCAL_FILE_TYPE;
+    private Integer transferFileType = FTP.ASCII_FILE_TYPE;
 
 
 }
