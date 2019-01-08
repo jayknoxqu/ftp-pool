@@ -22,19 +22,45 @@ public class FtpClientPoolTest {
     private FtpClientTemplate ftpTemplate;
 
     @Test
-    public void uploadFile() {
-        boolean uploadResult = ftpTemplate.uploadFile(new File("F:\\kubernetes-server-linux-amd64.tar.gz"), "/home/test");
+    public void uploadFileTest() {
+        File file = new File("F:\\2017061315035721.txt");
+        boolean uploadResult = ftpTemplate.uploadFile(file, "/");
         Assert.assertTrue(uploadResult);
     }
 
+
     @Test
-    public void downloadFile() {
-        boolean downloadResult = ftpTemplate.downloadFile("/home/test", "2017061315035721.txt", "F:\\");
+    public void uploadFileThreadTest() {
+        for (int i = 0; i < 100; i++) {
+            Runnable runnable = () -> {
+                File file = new File("F:\\2017061315035721.txt");
+                boolean uploadResult = ftpTemplate.uploadFile(file, "/");
+                String threadName = Thread.currentThread().getName();
+                System.out.println("Thread 1-" + threadName + ":" + uploadResult);
+            };
+            runnable.run();
+            new Thread(runnable).start();
+
+            Runnable runnable1 = () -> {
+                File file = new File("F:\\2019010115035721.txt");
+                boolean uploadResult = ftpTemplate.uploadFile(file, "/");
+                String threadName = Thread.currentThread().getName();
+                System.out.println("Thread 2-" + threadName + ":" + uploadResult);
+            };
+            runnable1.run();
+            new Thread(runnable1).start();
+        }
+    }
+
+
+    @Test
+    public void downloadFileTest() {
+        boolean downloadResult = ftpTemplate.downloadFile("/", "2017061315035721.txt", "F:\\");
         Assert.assertTrue(downloadResult);
     }
 
     @Test
-    public void deleteFile() {
+    public void deleteFileTest() {
         boolean deleteResult = ftpTemplate.deleteFile("/home/test", "2017061315035721.txt");
         Assert.assertTrue(deleteResult);
     }

@@ -36,26 +36,32 @@ public class FtpClientTemplate {
         try {
             //从池中获取对象
             ftpClient = ftpClientPool.borrowObject();
+            // 验证FTP服务器是否登录成功
+            int replyCode = ftpClient.getReplyCode();
+            if (!FTPReply.isPositiveCompletion(replyCode)) {
+                log.warn("ftpServer refused connection, replyCode:{}", replyCode);
+                return false;
+            }
             // 改变工作路径
             ftpClient.changeWorkingDirectory(remotePath);
             inStream = new BufferedInputStream(new FileInputStream(localFile));
-            log.info(localFile.getName() + "开始上传.....");
+            log.info("start upload... {}", localFile.getName());
 
             final int retryTimes = 3;
 
             for (int j = 0; j <= retryTimes; j++) {
                 boolean success = ftpClient.storeFile(localFile.getName(), inStream);
                 if (success) {
-                    log.info(localFile.getName() + "文件上传成功!");
+                    log.info("upload file success! {}", localFile.getName());
                     return true;
                 }
-                log.warn("文件上传失败!试图重新上传... 尝试{}次", j);
+                log.warn("upload file failure! try uploading again... {} times", j);
             }
 
         } catch (FileNotFoundException e) {
-            log.error("系统找不到指定的文件!{}", localFile);
+            log.error("file not found!{}", localFile);
         } catch (Exception e) {
-            log.error("上传文件异常!", e);
+            log.error("upload file failure!", e);
         } finally {
             IOUtils.closeQuietly(inStream);
             //将对象放回池中
@@ -78,11 +84,12 @@ public class FtpClientTemplate {
         try {
             ftpClient = ftpClientPool.borrowObject();
             // 验证FTP服务器是否登录成功
-            if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode())) {
+            int replyCode = ftpClient.getReplyCode();
+            if (!FTPReply.isPositiveCompletion(replyCode)) {
+                log.warn("ftpServer refused connection, replyCode:{}", replyCode);
                 return false;
             }
 
-            ftpClient = ftpClientPool.borrowObject();
             // 切换FTP目录
             ftpClient.changeWorkingDirectory(remotePath);
             FTPFile[] ftpFiles = ftpClient.listFiles();
@@ -98,7 +105,7 @@ public class FtpClientTemplate {
             ftpClient.logout();
             return true;
         } catch (Exception e) {
-            log.error("下载文件异常", e);
+            log.error("download file failure!", e);
         } finally {
             IOUtils.closeQuietly(outputStream);
             ftpClientPool.returnObject(ftpClient);
@@ -120,15 +127,16 @@ public class FtpClientTemplate {
             // 验证FTP服务器是否登录成功
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
+                log.warn("ftpServer refused connection, replyCode:{}", replyCode);
                 return false;
             }
             // 切换FTP目录
             ftpClient.changeWorkingDirectory(remotePath);
             int delCode = ftpClient.dele(fileName);
-            log.debug("删除文件:服务器返回的code为:{}", delCode);
+            log.debug("delete file reply code:{}", delCode);
             return true;
         } catch (Exception e) {
-            log.error("文件删除失败!", e);
+            log.error("delete file failure!", e);
         } finally {
             ftpClientPool.returnObject(ftpClient);
         }

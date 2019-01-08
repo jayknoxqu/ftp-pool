@@ -43,7 +43,7 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 ftpClient.disconnect();
-                log.warn("FTPServer refused connection,replyCode:{}", replyCode);
+                log.warn("ftpServer refused connection,replyCode:{}", replyCode);
                 return null;
             }
 
@@ -79,6 +79,7 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
         if (ftpPooled == null) {
             return;
         }
+
         FTPClient ftpClient = ftpPooled.getObject();
 
         try {
@@ -105,7 +106,7 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
             FTPClient ftpClient = ftpPooled.getObject();
             return ftpClient.sendNoOp();
         } catch (IOException e) {
-            log.error("Failed to validate client: {}", e);
+            log.error("failed to validate client: {}", e);
         }
         return false;
     }
