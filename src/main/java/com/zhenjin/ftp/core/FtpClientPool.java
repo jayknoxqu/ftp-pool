@@ -3,6 +3,7 @@ package com.zhenjin.ftp.core;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.pool2.BaseObjectPool;
+import org.apache.commons.pool2.PooledObject;
 import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
@@ -62,12 +63,15 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
     @Override
     public FTPClient borrowObject() throws Exception {
         FTPClient client = ftpBlockingQueue.take();
-
         if (ObjectUtils.isEmpty(client)) {
             client = ftpClientFactory.create();
             returnObject(client);
             // 验证对象是否有效
-        } else if (!ftpClientFactory.validateObject(ftpClientFactory.wrap(client))) {
+        }
+
+        PooledObject<FTPClient> ftpClientPooled = ftpClientFactory.wrap(client);
+
+        if (!ftpClientFactory.validateObject(ftpClientPooled)) {
             // 对无效的对象进行处理
             invalidateObject(client);
             // 创建新的对象
@@ -75,8 +79,8 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
             // 将新的对象放入连接池
             returnObject(client);
         }
-        return client;
 
+        return client;
     }
 
     /**

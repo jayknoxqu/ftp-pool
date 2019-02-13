@@ -358,7 +358,8 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
 
 不太赞成自己去实现连接池,这样会带来额外的维护成本...
 
-
+**具体使用参考测试类:**
+https://github.com/jayknoxqu/ftp-pool/blob/master/src/test/java/com/zhenjin/ftp/FtpClientPoolTest.java
 
 ### 四. 代码地址: 
 
@@ -367,14 +368,18 @@ public class FtpClientPool extends BaseObjectPool<FTPClient> {
 ​     **码云 :** https://gitee.com/jayknoxqu/ftp-pool
 
 
+### 五. 使用 Docker 快速搭建 FTP 服务
 
-### 五. 参考资料:
+```
+docker run -d -v /home/vsftpd:/home/vsftpd -p 21:21 -e FTP_USER=test -e FTP_PASS=test --name vsftpd fauria/vsftpd
+```
+
+### 六. 参考资料:
 
 [FTPClient连接池的实现 ](https://yq.aliyun.com/articles/5904)
 
 [Apache Commons-pool2（整理）](https://www.jianshu.com/p/b0189e01de35)
 
 [commons-pool2 官方案列](http://commons.apache.org/proper/commons-pool/examples.html)
-
 
 
