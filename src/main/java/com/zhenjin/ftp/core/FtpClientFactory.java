@@ -1,26 +1,28 @@
 package com.zhenjin.ftp.core;
 
 import com.zhenjin.ftp.config.FtpClientProperties;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 /**
- * FTPClient工厂类，通过FTPClient工厂提供FTPClient实例的创建和销毁
+ * FTPClient factory class, which provides the creation and destruction of FTPClient instances through the FTPClient factory
  *
  * @author ZhenJin
  * @see "http://commons.apache.org/proper/commons-pool/examples.html"
  * @see "http://commons.apache.org/proper/commons-net/examples/ftp/FTPClientExample.java"
  */
-@Slf4j
 public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
 
-    private FtpClientProperties config;
+    private static final Logger log = LoggerFactory.getLogger(FtpClientFactory.class);
+
+    private final FtpClientProperties config;
 
     public FtpClientFactory(FtpClientProperties config) {
         this.config = config;
@@ -43,12 +45,12 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 ftpClient.disconnect();
-                log.warn("ftpServer refused connection,replyCode:{}", replyCode);
+                log.warn("ftpServer refused connection,replyCode: {}", replyCode);
                 return null;
             }
 
             if (!ftpClient.login(config.getUsername(), config.getPassword())) {
-                log.warn("ftpClient login failed... username is {}; password: {}", config.getUsername(), config.getPassword());
+                log.warn("ftpClient login failed... [username: {}, password: {}]", config.getUsername(), config.getPassword());
             }
 
             ftpClient.setBufferSize(config.getBufferSize());
@@ -85,14 +87,14 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
         try {
             ftpClient.logout();
         } catch (IOException io) {
-            log.error("ftp client logout failed...{}", io);
+            log.error("ftp client logout failed...", io);
         } finally {
             try {
                 if (ftpClient.isConnected()) {
                     ftpClient.disconnect();
                 }
             } catch (IOException io) {
-                log.error("close ftp client failed...{}", io);
+                log.error("close ftp client failed...", io);
             }
         }
     }
@@ -106,10 +108,8 @@ public class FtpClientFactory extends BasePooledObjectFactory<FTPClient> {
             FTPClient ftpClient = ftpPooled.getObject();
             return ftpClient.sendNoOp();
         } catch (IOException e) {
-            log.error("failed to validate client: {}", e);
+            log.error("failed to validate client: ", e);
         }
         return false;
     }
-
-
 }

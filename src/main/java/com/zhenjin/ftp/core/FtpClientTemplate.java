@@ -1,55 +1,63 @@
 package com.zhenjin.ftp.core;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
 
 /**
- * 实现文件上传下载
+ * Implement file upload and download
  *
  * @author ZhenJin
+ * @author Amanuel
  */
-@Slf4j
 public class FtpClientTemplate {
 
-    private GenericObjectPool<FTPClient> ftpClientPool;
+    private final static Logger log = LoggerFactory.getLogger(FtpClientTemplate.class);
+
+    private final GenericObjectPool<FTPClient> ftpClientPool;
+    private final int retryCount;
 
     public FtpClientTemplate(FtpClientFactory ftpClientFactory) {
+        this(3, ftpClientFactory);
+    }
+
+    public FtpClientTemplate(int retryCount, FtpClientFactory ftpClientFactory) {
+        // For further tuning the number of objects in the pool,
+        // custom GenericObjectPoolConfig can be passed to the GenericObjectPool
         this.ftpClientPool = new GenericObjectPool<>(ftpClientFactory);
+        this.retryCount = retryCount;
     }
 
     /***
-     * 上传Ftp文件
+     * Upload Ftp files
      *
-     * @param localFile 当地文件
-     * @param remotePath 上传服务器路径 - 应该以/结束
+     * @param localFile local file
+     * @param remotePath Upload server path - should end with /
      * @return true or false
      */
     public boolean uploadFile(File localFile, String remotePath) {
         FTPClient ftpClient = null;
         BufferedInputStream inStream = null;
         try {
-            //从池中获取对象
-            ftpClient = ftpClientPool.borrowObject();
-            // 验证FTP服务器是否登录成功
+            ftpClient = ftpClientPool.borrowObject(); // Get or create client using FtpClientFactory
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                log.warn("ftpServer refused connection, replyCode:{}", replyCode);
+                log.warn("ftpServer refused connection, replyCode: {}", replyCode);
                 return false;
             }
-            // 改变工作路径
+
             ftpClient.changeWorkingDirectory(remotePath);
             inStream = new BufferedInputStream(new FileInputStream(localFile));
             log.info("start upload... {}", localFile.getName());
 
-            final int retryTimes = 3;
-
-            for (int j = 0; j <= retryTimes; j++) {
+            for (int j = 0; j <= retryCount; j++) {
                 boolean success = ftpClient.storeFile(localFile.getName(), inStream);
                 if (success) {
                     log.info("upload file success! {}", localFile.getName());
@@ -59,23 +67,23 @@ public class FtpClientTemplate {
             }
 
         } catch (FileNotFoundException e) {
-            log.error("file not found!{}", localFile);
+            log.error("file not found! {}", localFile);
         } catch (Exception e) {
             log.error("upload file failure!", e);
         } finally {
-            IOUtils.closeQuietly(inStream);
-            //将对象放回池中
+            IOUtils.closeQuietly(inStream, (e) -> log.error("Error closing stream: ", e));
+            // Put the object back into the pool
             ftpClientPool.returnObject(ftpClient);
         }
         return false;
     }
 
     /**
-     * 下载文件
+     * download file
      *
-     * @param remotePath FTP服务器文件目录
-     * @param fileName   需要下载的文件名称
-     * @param localPath  下载后的文件路径
+     * @param remotePath FTP server file directory
+     * @param fileName The name of the file to be downloaded
+     * @param localPath file path after downloading
      * @return true or false
      */
     public boolean downloadFile(String remotePath, String fileName, String localPath) {
@@ -83,22 +91,18 @@ public class FtpClientTemplate {
         OutputStream outputStream = null;
         try {
             ftpClient = ftpClientPool.borrowObject();
-            // 验证FTP服务器是否登录成功
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 log.warn("ftpServer refused connection, replyCode:{}", replyCode);
                 return false;
             }
 
-            // 切换FTP目录
             ftpClient.changeWorkingDirectory(remotePath);
             FTPFile[] ftpFiles = ftpClient.listFiles();
             for (FTPFile file : ftpFiles) {
                 if (fileName.equalsIgnoreCase(file.getName())) {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.append(localPath).append(File.separator).append(file.getName());
-                    File localFile = new File(stringBuilder.toString());
-                    outputStream = new FileOutputStream(localFile);
+                    File localFile = new File(localPath + File.separator + file.getName());
+                    outputStream = Files.newOutputStream(localFile.toPath());
                     ftpClient.retrieveFile(file.getName(), outputStream);
                 }
             }
@@ -107,33 +111,32 @@ public class FtpClientTemplate {
         } catch (Exception e) {
             log.error("download file failure!", e);
         } finally {
-            IOUtils.closeQuietly(outputStream);
+            IOUtils.closeQuietly(outputStream, (e) -> log.error("Error closing stream: ", e));
             ftpClientPool.returnObject(ftpClient);
         }
         return false;
     }
 
     /**
-     * 删除文件
+     * Delete Files
      *
-     * @param remotePath FTP服务器保存目录
-     * @param fileName   要删除的文件名称
+     * @param remotePath FTP server saving directory
+     * @param fileName The name of the file to be deleted
      * @return true or false
      */
     public boolean deleteFile(String remotePath, String fileName) {
         FTPClient ftpClient = null;
         try {
             ftpClient = ftpClientPool.borrowObject();
-            // 验证FTP服务器是否登录成功
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                log.warn("ftpServer refused connection, replyCode:{}", replyCode);
+                log.warn("ftpServer refused connection, replyCode: {}", replyCode);
                 return false;
             }
-            // 切换FTP目录
+
             ftpClient.changeWorkingDirectory(remotePath);
             int delCode = ftpClient.dele(fileName);
-            log.debug("delete file reply code:{}", delCode);
+            log.debug("delete file reply code: {}", delCode);
             return true;
         } catch (Exception e) {
             log.error("delete file failure!", e);
@@ -142,6 +145,4 @@ public class FtpClientTemplate {
         }
         return false;
     }
-
-
 }
