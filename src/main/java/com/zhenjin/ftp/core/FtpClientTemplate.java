@@ -21,7 +21,11 @@ public class FtpClientTemplate {
 
     private final static Logger log = LoggerFactory.getLogger(FtpClientTemplate.class);
 
+    //  Uses "lazy loading".
+    //  The pool doesn't create objects until they are requested,
+    //  and it maintains a minimum number of idle objects (see GenericObjectPoolConfig) even if they are not currently being used.
     private final GenericObjectPool<FTPClient> ftpClientPool;
+
     private final int retryCount;
 
     public FtpClientTemplate(FtpClientFactory ftpClientFactory) {
@@ -82,8 +86,8 @@ public class FtpClientTemplate {
      * download file
      *
      * @param remotePath FTP server file directory
-     * @param fileName The name of the file to be downloaded
-     * @param localPath file path after downloading
+     * @param fileName   The name of the file to be downloaded
+     * @param localPath  file path after downloading
      * @return true or false
      */
     public boolean downloadFile(String remotePath, String fileName, String localPath) {
@@ -121,7 +125,7 @@ public class FtpClientTemplate {
      * Delete Files
      *
      * @param remotePath FTP server saving directory
-     * @param fileName The name of the file to be deleted
+     * @param fileName   The name of the file to be deleted
      * @return true or false
      */
     public boolean deleteFile(String remotePath, String fileName) {
@@ -144,5 +148,9 @@ public class FtpClientTemplate {
             ftpClientPool.returnObject(ftpClient);
         }
         return false;
+    }
+
+    public void closePool() {
+        if (ftpClientPool != null && !ftpClientPool.isClosed()) ftpClientPool.close();
     }
 }
