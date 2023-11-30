@@ -4,12 +4,16 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
+
+import static com.zhenjin.ftp.StringUtils.isAnyBlank;
+import static com.zhenjin.ftp.StringUtils.isBlank;
 
 /**
  * Implement file upload and download
@@ -23,8 +27,8 @@ public class FtpClientTemplate {
 
     //  Uses "lazy loading".
     //  The pool doesn't create objects until they are requested,
-    //  and it maintains a minimum number of idle objects (see GenericObjectPoolConfig) even if they are not currently being used.
-    private final GenericObjectPool<FTPClient> ftpClientPool;
+    //  and it maintains a minimum number of idle objects
+    private final ObjectPool<FTPClient> objectPool;
 
     private final int retryCount;
 
@@ -35,7 +39,11 @@ public class FtpClientTemplate {
     public FtpClientTemplate(int retryCount, FtpClientFactory ftpClientFactory) {
         // For further tuning the number of objects in the pool,
         // custom GenericObjectPoolConfig can be passed to the GenericObjectPool
-        this.ftpClientPool = new GenericObjectPool<>(ftpClientFactory);
+        this(retryCount, new GenericObjectPool<>(ftpClientFactory));
+    }
+
+    public FtpClientTemplate(int retryCount, ObjectPool<FTPClient> objectPool) {
+        this.objectPool = objectPool;
         this.retryCount = retryCount;
     }
 
@@ -47,10 +55,11 @@ public class FtpClientTemplate {
      * @return true or false
      */
     public boolean uploadFile(File localFile, String remotePath) {
+        if (null == localFile || isBlank(remotePath)) throw new IllegalArgumentException();
         FTPClient ftpClient = null;
         BufferedInputStream inStream = null;
         try {
-            ftpClient = ftpClientPool.borrowObject(); // Get or create client using FtpClientFactory
+            ftpClient = objectPool.borrowObject(); // Get or create client using FtpClientFactory
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 log.warn("ftpServer refused connection, replyCode: {}", replyCode);
@@ -76,8 +85,14 @@ public class FtpClientTemplate {
             log.error("upload file failure!", e);
         } finally {
             IOUtils.closeQuietly(inStream, (e) -> log.error("Error closing stream: ", e));
-            // Put the object back into the pool
-            ftpClientPool.returnObject(ftpClient);
+            if (ftpClient != null) {
+                try {
+                    // Put the object back into the pool
+                    objectPool.returnObject(ftpClient);
+                } catch (Exception e) {
+                    log.error("", e);
+                }
+            }
         }
         return false;
     }
@@ -90,11 +105,12 @@ public class FtpClientTemplate {
      * @param localPath  file path after downloading
      * @return true or false
      */
-    public boolean downloadFile(String remotePath, String fileName, String localPath) {
+    public boolean downloadFile(String remotePath, String fileName, String localPath) throws Exception {
+        if (isAnyBlank(remotePath, fileName, localPath)) throw new IllegalArgumentException();
         FTPClient ftpClient = null;
         OutputStream outputStream = null;
         try {
-            ftpClient = ftpClientPool.borrowObject();
+            ftpClient = objectPool.borrowObject();
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 log.warn("ftpServer refused connection, replyCode:{}", replyCode);
@@ -116,7 +132,7 @@ public class FtpClientTemplate {
             log.error("download file failure!", e);
         } finally {
             IOUtils.closeQuietly(outputStream, (e) -> log.error("Error closing stream: ", e));
-            ftpClientPool.returnObject(ftpClient);
+            objectPool.returnObject(ftpClient);
         }
         return false;
     }
@@ -128,10 +144,11 @@ public class FtpClientTemplate {
      * @param fileName   The name of the file to be deleted
      * @return true or false
      */
-    public boolean deleteFile(String remotePath, String fileName) {
+    public boolean deleteFile(String remotePath, String fileName) throws Exception {
+        if (isAnyBlank(remotePath, fileName)) throw new IllegalArgumentException();
         FTPClient ftpClient = null;
         try {
-            ftpClient = ftpClientPool.borrowObject();
+            ftpClient = objectPool.borrowObject();
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
                 log.warn("ftpServer refused connection, replyCode: {}", replyCode);
@@ -145,12 +162,8 @@ public class FtpClientTemplate {
         } catch (Exception e) {
             log.error("delete file failure!", e);
         } finally {
-            ftpClientPool.returnObject(ftpClient);
+            objectPool.returnObject(ftpClient);
         }
         return false;
-    }
-
-    public void closePool() {
-        if (ftpClientPool != null && !ftpClientPool.isClosed()) ftpClientPool.close();
     }
 }
