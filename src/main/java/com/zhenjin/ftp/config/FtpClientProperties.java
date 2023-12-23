@@ -1,81 +1,107 @@
 package com.zhenjin.ftp.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.net.ftp.FTP;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
- * ftp客服端连接配置
+ * ftp properties
  *
  * @author ZhenJin
- * @see "https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config-typesafe-configuration-properties"
+ * @author Amanuel
  */
-@Getter
-@Setter
-@Component
-@ConfigurationProperties(ignoreUnknownFields = false, prefix = "ftp.client")
 public class FtpClientProperties {
 
-    /**
-     * ftp地址
-     */
-    private String host;
+    private final String host;
+    private final String username;
+    private final String password;
+    private final Integer dataTimeout;
+    private final Integer connectTimeout;
+    private final Integer port;
+    private final Integer bufferSize;
+    private final String encoding;
+    private final boolean passiveMode;
+    private final Integer keepAliveTimeout;
+    private final Integer transferFileType;
+
+    // Default values
+    private static final int DEFAULT_PORT = 21;
+    private static final int DEFAULT_BUFFER_SIZE = 1024;
+    private static final String DEFAULT_ENCODING = "UTF-8";
+    private static final boolean DEFAULT_PASSIVE_MODE = true;
 
     /**
-     * 端口号
-     */
-    private Integer port = 21;
-
-    /**
-     * 登录用户
-     */
-    private String username;
-
-    /**
-     * 登录密码
-     */
-    private String password;
-
-    /**
-     * 被动模式
-     */
-    private boolean passiveMode = false;
-
-    /**
-     * 编码
-     */
-    private String encoding = "UTF-8";
-
-    /**
-     * 连接超时时间(秒)
-     */
-    private Integer connectTimeout;
-
-    /**
-     * 传输超时时间(秒)
-     */
-    private Integer dataTimeout;
-
-    /**
-     * 缓冲大小
-     */
-    private Integer bufferSize = 1024;
-
-    /**
-     * 设置keepAlive
-     * 单位:秒  0禁用
+     * Set keepAlive
+     * Unit: second 0 disabled
      * Zero (or less) disables
      */
-    private Integer keepAliveTimeout = 0;
+    private static final int DEFAULT_KEEP_ALIVE_TIMEOUT = 0;
 
     /**
-     * 传输文件类型
+     * Transfer file type
      * in theory this should not be necessary as servers should default to ASCII
-     * but they don't all do so - see NET-500
+     * but, they don't all do so - see NET-500
      */
-    private Integer transferFileType = FTP.ASCII_FILE_TYPE;
+    private static final int DEFAULT_TRANSFER_FILE_TYPE = FTP.ASCII_FILE_TYPE;
 
 
+    public FtpClientProperties(String host, String username, String password, Integer dataTimeout, Integer connectTimeout) {
+       this(host, username, password, dataTimeout, connectTimeout, DEFAULT_PORT, DEFAULT_BUFFER_SIZE, DEFAULT_ENCODING, DEFAULT_PASSIVE_MODE, DEFAULT_KEEP_ALIVE_TIMEOUT, DEFAULT_TRANSFER_FILE_TYPE);
+    }
+
+    public FtpClientProperties(String host, String username, String password, Integer dataTimeout, Integer connectTimeout, Integer port, Integer bufferSize, String encoding, boolean passiveMode, Integer keepAliveTimeout, Integer transferFileType) {
+        this.host = host;
+        this.username = username;
+        this.password = password;
+        this.dataTimeout = dataTimeout;
+        this.connectTimeout = connectTimeout;
+        this.port = port;
+        this.bufferSize = bufferSize;
+        this.encoding = encoding;
+        this.passiveMode = passiveMode;
+        this.keepAliveTimeout = keepAliveTimeout;
+        this.transferFileType = transferFileType;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public Integer getDataTimeout() {
+        return dataTimeout;
+    }
+
+    public Integer getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public Integer getBufferSize() {
+        return bufferSize;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public boolean isPassiveMode() {
+        return passiveMode;
+    }
+
+    public Integer getKeepAliveTimeout() {
+        return keepAliveTimeout;
+    }
+
+    public Integer getTransferFileType() {
+        return transferFileType;
+    }
 }
